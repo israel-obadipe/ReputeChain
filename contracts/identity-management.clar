@@ -41,6 +41,7 @@
 (define-data-var admin principal tx-sender)
 (define-data-var credential-nonce uint u0)
 
+
 ;; Data Maps
 (define-map identities
     principal
@@ -281,16 +282,12 @@
     )
 )
 
+
 ;; Read-Only Query Functions
 
 ;; Retrieves the identity data for a given principal
 (define-read-only (get-identity (identity principal))
     (map-get? identities identity)
-)
-
-;; Retrieves the credential data for a given issuer and nonce
-(define-read-only (get-credential (issuer principal) (nonce uint))
-    (map-get? credential-map { issuer: issuer, nonce: nonce })
 )
 
 ;; Retrieves the credential data for a given issuer and nonce
@@ -349,4 +346,19 @@
 ;; Validates the expiration ensuring it is greater than the current block height plus the minimum expiration blocks
 (define-private (is-valid-expiration (expiration uint))
     (> expiration (+ block-height MIN-EXPIRATION-BLOCKS))
+)
+
+;; Validates the metadata length ensuring it does not exceed the maximum length
+(define-private (is-valid-metadata-length (metadata (string-utf8 256)))
+    (<= (len metadata) MAX-METADATA-LENGTH)
+)
+
+;; Validates the hash ensuring it is not the zero hash
+(define-private (is-valid-hash (hash (buff 32)))
+    (not (is-eq hash 0x0000000000000000000000000000000000000000000000000000000000000000))
+)
+
+;; Checks if a new credential can be added to the current list of credentials
+(define-private (can-add-credential (current-credentials (list 10 principal)))
+    (< (len current-credentials) MAX-CREDENTIALS)
 )
