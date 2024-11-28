@@ -33,3 +33,10 @@
 (define-constant MAX-METADATA-LENGTH u256)
 (define-constant MINIMUM-PROOF-SIZE u64)
 (define-constant MAX-CREDENTIALS u10)
+
+;; data vars
+;;
+
+;; State Variables
+(define-data-var admin principal tx-sender)
+(define-data-var credential-nonce uint u0)
