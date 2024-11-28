@@ -320,3 +320,33 @@
 (define-read-only (get-proof (proof-hash (buff 32)))
     (map-get? zero-knowledge-proofs proof-hash)
 )
+
+;; private functions
+;;
+
+;; Utility Functions
+
+;; Validates the recovery address ensuring it is not the transaction sender or the admin
+(define-private (is-valid-recovery-address (recovery-addr (optional principal)))
+    (match recovery-addr
+        recovery-principal 
+        (and 
+            (not (is-eq recovery-principal tx-sender)) 
+            (not (is-eq recovery-principal (var-get admin)))
+        )
+        true
+    )
+)
+
+;; Validates the proof data ensuring it meets the minimum size and is not empty
+(define-private (is-valid-proof-data (proof-data (buff 1024)))
+    (and
+        (>= (len proof-data) MINIMUM-PROOF-SIZE)
+        (not (is-eq proof-data 0x))
+    )
+)
+
+;; Validates the expiration ensuring it is greater than the current block height plus the minimum expiration blocks
+(define-private (is-valid-expiration (expiration uint))
+    (> expiration (+ block-height MIN-EXPIRATION-BLOCKS))
+)
