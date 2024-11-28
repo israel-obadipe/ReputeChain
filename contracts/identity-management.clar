@@ -40,3 +40,16 @@
 ;; State Variables
 (define-data-var admin principal tx-sender)
 (define-data-var credential-nonce uint u0)
+
+;; Data Maps
+(define-map identities
+    principal
+    {
+        hash: (buff 32),
+        credentials: (list 10 principal),
+        reputation-score: uint,
+        recovery-address: (optional principal),
+        last-updated: uint,
+        status: (string-ascii 20)
+    }
+)
