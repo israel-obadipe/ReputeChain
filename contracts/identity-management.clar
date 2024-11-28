@@ -315,3 +315,8 @@
         ))
     )
 )
+
+;; Retrieves the zero-knowledge proof data for a given proof hash
+(define-read-only (get-proof (proof-hash (buff 32)))
+    (map-get? zero-knowledge-proofs proof-hash)
+)
