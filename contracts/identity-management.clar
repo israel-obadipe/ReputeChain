@@ -53,3 +53,24 @@
         status: (string-ascii 20)
     }
 )
+
+(define-map credential-map
+    { issuer: principal, nonce: uint }
+    {
+        subject: principal,
+        claim-hash: (buff 32),
+        expiration: uint,
+        revoked: bool,
+        metadata: (string-utf8 256)
+    }
+)
+
+(define-map zero-knowledge-proofs
+    (buff 32)
+    {
+        prover: principal,
+        verified: bool,
+        timestamp: uint,
+        proof-data: (buff 1024)
+    }
+)
