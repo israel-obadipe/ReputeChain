@@ -292,3 +292,26 @@
 (define-read-only (get-credential (issuer principal) (nonce uint))
     (map-get? credential-map { issuer: issuer, nonce: nonce })
 )
+
+;; Retrieves the credential data for a given issuer and nonce
+(define-read-only (get-credential (issuer principal) (nonce uint))
+    (map-get? credential-map { issuer: issuer, nonce: nonce })
+)
+
+;; Verifies if a credential is valid and not revoked
+(define-read-only (verify-credential (issuer principal) (nonce uint))
+    (let
+        (
+            (credential 
+                (unwrap! 
+                    (map-get? credential-map { issuer: issuer, nonce: nonce }) 
+                    ERR-INVALID-CREDENTIAL
+                )
+            )
+        )
+        (ok (and
+            (not (get revoked credential))
+            (< block-height (get expiration credential))
+        ))
+    )
+)
