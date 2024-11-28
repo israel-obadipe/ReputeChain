@@ -280,3 +280,15 @@
         (ok true)
     )
 )
+
+;; Read-Only Query Functions
+
+;; Retrieves the identity data for a given principal
+(define-read-only (get-identity (identity principal))
+    (map-get? identities identity)
+)
+
+;; Retrieves the credential data for a given issuer and nonce
+(define-read-only (get-credential (issuer principal) (nonce uint))
+    (map-get? credential-map { issuer: issuer, nonce: nonce })
+)
