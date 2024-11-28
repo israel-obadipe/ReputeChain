@@ -248,3 +248,35 @@
         (ok true)
     )
 )
+
+;; Recovery Mechanisms
+
+;; Initiates the recovery process for an identity
+(define-public (initiate-recovery 
+    (identity principal) 
+    (new-hash (buff 32)))
+    (let
+        (
+            (sender tx-sender)
+            (identity-data (map-get? identities identity))
+            (recovery-address 
+                (unwrap! 
+                    (get recovery-address (unwrap! identity-data ERR-NOT-REGISTERED)) 
+                    ERR-NOT-AUTHORIZED
+                )
+            )
+        )
+        (asserts! (is-eq sender recovery-address) ERR-NOT-AUTHORIZED)
+        
+        (map-set identities identity
+            (merge (unwrap-panic identity-data)
+                { 
+                    hash: new-hash,
+                    last-updated: block-height,
+                    status: "RECOVERED"
+                }
+            )
+        )
+        (ok true)
+    )
+)
