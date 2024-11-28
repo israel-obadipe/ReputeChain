@@ -116,3 +116,74 @@
         (ok true)
     )
 )
+
+;; Credential Management
+
+;; Adds a credential to an identity
+(define-public (add-credential-to-identity (subject principal) (credential-principal principal))
+    (let
+        (
+            (sender tx-sender)
+            (identity (map-get? identities subject))
+        )
+        (asserts! (is-some identity) ERR-NOT-REGISTERED)
+        (asserts! (is-eq sender (var-get admin)) ERR-NOT-AUTHORIZED)
+        (asserts! 
+            (can-add-credential (get credentials (unwrap-panic identity))) 
+            ERR-CREDENTIAL-LIMIT
+        )
+        
+        (map-set identities subject
+            (merge 
+                (unwrap-panic identity)
+                {
+                    credentials: 
+                        (unwrap-panic 
+                            (as-max-len? 
+                                (append (get credentials (unwrap-panic identity)) credential-principal) 
+                                u10
+                            )
+                        )
+                }
+            )
+        )
+        (ok true)
+    )
+)
+
+;; Issues a new credential to a subject
+(define-public (issue-credential 
+    (subject principal)
+    (claim-hash (buff 32))
+    (expiration uint)
+    (metadata (string-utf8 256)))
+    (let
+        (
+            (sender tx-sender)
+            (current-nonce (var-get credential-nonce))
+            (credential-id { issuer: sender, nonce: current-nonce })
+            (issuer-identity (map-get? identities sender))
+            (subject-identity (map-get? identities subject))
+        )
+        (asserts! (is-some issuer-identity) ERR-NOT-REGISTERED)
+        (asserts! (is-some subject-identity) ERR-NOT-REGISTERED)
+        (asserts! (is-valid-hash claim-hash) ERR-INVALID-INPUT)
+        (asserts! (is-valid-expiration expiration) ERR-INVALID-EXPIRATION)
+        (asserts! (is-valid-metadata-length metadata) ERR-INVALID-INPUT)
+        
+        ;; Increment nonce and record credential
+        (var-set credential-nonce (+ current-nonce u1))
+        (map-set credential-map credential-id {
+            subject: subject,
+            claim-hash: claim-hash,
+            expiration: expiration,
+            revoked: false,
+            metadata: metadata
+        })
+        
+        ;; Attempt to add credential to identity
+        (try! (add-credential-to-identity subject sender))
+        
+        (ok true)
+    )
+)
