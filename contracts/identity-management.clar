@@ -74,3 +74,18 @@
         proof-data: (buff 1024)
     }
 )
+
+;; public functions
+;;
+
+;; Administrative Functions
+
+;; Sets a new admin for the contract
+(define-public (set-admin (new-admin principal))
+    (begin
+        (asserts! (is-eq tx-sender (var-get admin)) ERR-NOT-AUTHORIZED)
+        (asserts! (not (is-eq new-admin tx-sender)) ERR-INVALID-INPUT)
+        (var-set admin new-admin)
+        (ok true)
+    )
+)
