@@ -187,3 +187,64 @@
         (ok true)
     )
 )
+
+;; Revokes an existing credential
+(define-public (revoke-credential (issuer principal) (nonce uint))
+    (let
+        (
+            (sender tx-sender)
+            (credential-id { issuer: issuer, nonce: nonce })
+            (credential (map-get? credential-map credential-id))
+        )
+        (asserts! (is-some credential) ERR-INVALID-CREDENTIAL)
+        (asserts! (is-eq sender issuer) ERR-NOT-AUTHORIZED)
+        
+        (map-set credential-map credential-id 
+            (merge (unwrap-panic credential) { revoked: true }))
+        (ok true)
+    )
+)
+
+;; Reputation Management
+
+;; Updates the reputation score of a subject
+(define-public (update-reputation (subject principal) (score-change int))
+    (let
+        (
+            (sender tx-sender)
+            (identity (map-get? identities subject))
+            (current-score 
+                (get reputation-score 
+                    (unwrap! identity ERR-NOT-REGISTERED)
+                )
+            )
+            (score-change-abs 
+                (if (< score-change 0) 
+                    (* score-change -1) 
+                    score-change
+                )
+            )
+        )
+        (asserts! (is-eq sender (var-get admin)) ERR-NOT-AUTHORIZED)
+        (asserts! 
+            (or 
+                (> score-change 0)
+                (>= (to-int current-score) score-change-abs)
+            ) 
+            ERR-INVALID-SCORE
+        )
+        
+        (map-set identities subject
+            (merge (unwrap-panic identity)
+                { 
+                    reputation-score: 
+                    (if (> score-change 0)
+                        (+ current-score (to-uint score-change))
+                        (to-uint (- (to-int current-score) score-change-abs))
+                    )
+                }
+            )
+        )
+        (ok true)
+    )
+)
