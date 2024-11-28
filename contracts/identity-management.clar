@@ -89,3 +89,30 @@
         (ok true)
     )
 )
+
+;; Identity Management
+
+;; Registers a new identity with a hash and optional recovery address
+(define-public (register-identity 
+    (identity-hash (buff 32)) 
+    (recovery-addr (optional principal)))
+    (let
+        (
+            (sender tx-sender)
+            (existing-identity (map-get? identities sender))
+        )
+        (asserts! (is-none existing-identity) ERR-ALREADY-REGISTERED)
+        (asserts! (is-valid-hash identity-hash) ERR-INVALID-INPUT)
+        (asserts! (is-valid-recovery-address recovery-addr) ERR-INVALID-RECOVERY-ADDRESS)
+        
+        (map-set identities sender {
+            hash: identity-hash,
+            credentials: (list),
+            reputation-score: u100,
+            recovery-address: recovery-addr,
+            last-updated: block-height,
+            status: "ACTIVE"
+        })
+        (ok true)
+    )
+)
